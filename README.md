@@ -1,94 +1,187 @@
-# Zerotha — A Full-Stack Stock Trading Dashboard
+# Zerotha — Full-Stack Stock Trading Platform
 
-Zerotha is a full-stack web app inspired by Zerodha — India's largest stock broker. Built as a personal learning project, it covers everything from a public-facing marketing site to a protected trading dashboard, all backed by a real REST API with session-based authentication.
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white&style=flat-square)
+![Node.js](https://img.shields.io/badge/Node.js-Express_5-339933?logo=node.js&logoColor=white&style=flat-square)
+![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white&style=flat-square)
+![Passport.js](https://img.shields.io/badge/Auth-Passport.js-34E27A?style=flat-square)
+![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
 
----
+A full-stack trading dashboard inspired by [Zerodha](https://zerodha.com) — India's largest stock broker. Built from scratch with a real backend, session-based authentication, and a fully protected trading interface. This project simulates the core flows of a production trading app — from user registration all the way to placing a buy order that persists in a database.
 
-## What's inside
-
-The project is split into three parts that talk to each other:
-
-```
-Zerotha/
-├── frontend/     → Public website (landing, login, signup)   → localhost:3000
-├── Dashboard/    → Private trading dashboard                 → localhost:3001
-└── backend/      → Express API + MongoDB                     → localhost:3002
-```
-
-**Frontend** is what a visitor sees first — a landing page, pricing info, product pages, and the login/signup flow. Once you log in, it redirects you to the Dashboard.
-
-**Dashboard** is the actual trading interface. It checks your session on load — if you're not logged in, it bounces you back to the login page automatically. Inside you'll find your holdings, open positions, order history, a watchlist, and charts.
-
-**Backend** handles everything behind the scenes — user registration and login (using Passport.js + sessions), and protected API endpoints for holdings, positions, and orders. Data is stored in MongoDB Atlas.
+> Built as a portfolio project to demonstrate full-stack development across multiple React apps, a Node.js REST API, and MongoDB — all wired together with shared session cookies.
 
 ---
 
-## Features
+## Live Architecture
 
-- **Session-based auth** — Register, log in, log out. Sessions persist for 24 hours. Passwords are hashed automatically via `passport-local-mongoose`.
-- **Auth-guarded dashboard** — The Dashboard checks `/api/me` before rendering. Unauthenticated users get redirected to login.
-- **Holdings & Positions** — Fetched live from MongoDB. Auto-seeded with sample Indian stocks (INFY, TCS, RELIANCE, etc.) if the DB is empty.
-- **Order placement** — Buy orders go through a popup window and get saved to MongoDB via the `/api/newOrder` endpoint.
-- **Real order history** — The Orders page fetches and displays actual orders from the database, color-coded by mode (BUY / SELL).
-- **Profile menu** — Shows your username with initials as an avatar. Click it to log out.
-- **Charts** — Doughnut and vertical bar charts using `chart.js`.
+```
+┌─────────────────────┐     ┌─────────────────────┐     ┌─────────────────────┐
+│   Frontend          │     │   Dashboard          │     │   Backend (API)     │
+│   localhost:3000    │◄───►│   localhost:3001     │◄───►│   localhost:3002    │
+│                     │     │                      │     │                     │
+│  Landing pages      │     │  Trading interface   │     │  Express REST API   │
+│  Login / Signup     │     │  Holdings, Orders    │     │  MongoDB + Passport │
+│  Marketing site     │     │  Charts, Watchlist   │     │  Session auth       │
+└─────────────────────┘     └─────────────────────┘     └─────────────────────┘
+```
+
+---
+
+## Key Features
+
+### Authentication & Security
+- **Session-based auth** using Passport.js + `passport-local-mongoose` — no JWT needed, sessions handled server-side with `express-session`
+- **Password hashing** handled automatically by `passport-local-mongoose` (PBKDF2 with salt)
+- **Route protection** — all data endpoints (`/api/allHoldings`, `/api/allPositions`, `/api/allOrders`, `/api/newOrder`) require an active session via `isLoggedIn` middleware
+- **Cross-origin session sharing** — Both React apps (ports 3000 & 3001) share the same session cookie using CORS `credentials: true`
+
+### Dashboard
+- **Auth guard on load** — Dashboard calls `GET /api/me` before rendering. Unauthenticated users are silently redirected to the login page
+- **Holdings** — Live portfolio data fetched from MongoDB, displaying stock name, quantity, average price, current price, and P&L
+- **Positions** — Intraday positions with product type (CNC/MIS) and day change
+- **Orders** — Real-time order history pulled from the database, color-coded by BUY (green) / SELL (red)
+- **Watchlist + Buy Window** — Floating buy order popup that submits to the backend and persists the order
+- **Charts** — Portfolio breakdown via Doughnut chart and performance via vertical bar chart (Chart.js)
+- **Profile menu** — Username displayed with avatar initials. Click to toggle a dropdown with logout
+
+### Frontend (Marketing Site)
+- Multi-page React app with routes for Home, About, Products, Pricing, Support, Login, and Signup
+- Shared Navbar and Footer across all pages
+- Login success triggers a session check and redirects to the Dashboard
 
 ---
 
 ## Tech Stack
 
-| Layer | Tech |
-|-------|------|
-| Frontend | React 19, React Router v7 |
-| Dashboard | React 19, MUI, Chart.js |
+| Layer | Technology |
+|-------|------------|
+| Frontend | React 19, React Router v7, Axios |
+| Dashboard | React 19, React Router v7, MUI v9, Chart.js 4, Axios |
 | Backend | Node.js, Express 5 |
-| Auth | Passport.js, passport-local-mongoose, express-session |
-| Database | MongoDB (via Mongoose) |
-| HTTP | Axios (shared instance with `withCredentials: true`) |
+| Authentication | Passport.js, passport-local-mongoose, express-session |
+| Database | MongoDB Atlas (Mongoose ODM) |
+| API Client | Axios (shared instance with `withCredentials: true` for cookie forwarding) |
+
+---
+
+## Project Structure
+
+```
+Zerotha/
+│
+├── backend/
+│   ├── index.js                  # Express server — all routes, middleware, DB seed
+│   ├── model/
+│   │   ├── UserModel.js          # User schema + passport-local-mongoose plugin
+│   │   ├── HoldingsModel.js
+│   │   ├── OrdersModel.js
+│   │   └── PositionsModel.js
+│   └── schemas/
+│       ├── HoldingsSchema.js
+│       ├── OrdersSchema.js
+│       └── PositionsSchema.js
+│
+├── frontend/                     # Public-facing marketing + auth site (port 3000)
+│   └── src/
+│       ├── index.js              # BrowserRouter with all page routes
+│       └── landing/
+│           ├── Navbar.js / Footer.js
+│           ├── home/             # Homepage sections
+│           ├── signup/           # Login.js + SignUP.js
+│           ├── about/
+│           ├── pricing/
+│           ├── products/
+│           └── support/
+│
+└── Dashboard/                    # Protected trading dashboard (port 3001)
+    └── src/
+        ├── index.js              # Calls /api/me before rendering — redirects if unauthed
+        ├── components/
+        │   ├── Menu.js           # Sidebar navigation + user profile + logout
+        │   ├── Dashboard.js      # Main layout with sidebar + content area
+        │   ├── WatchList.js      # Stock watchlist with buy trigger
+        │   ├── BuyActionWindow.js# Floating order form — posts to /api/newOrder
+        │   ├── Holdings.js       # Portfolio holdings table
+        │   ├── Positions.js      # Open positions table
+        │   ├── Orders.js         # Live order history from DB
+        │   ├── Funds.js          # Account funds overview
+        │   ├── Summary.js        # P&L summary
+        │   ├── DoughnoutChart.js # Portfolio allocation chart
+        │   └── VerticalGraph.js  # Performance bar chart
+        └── utils/
+            └── api.js            # Shared Axios instance — baseURL + withCredentials
+```
+
+---
+
+## Authentication Flow
+
+```
+User visits Dashboard (localhost:3001)
+          │
+          ▼
+  GET /api/me  ──► 401 Unauthorized
+          │                │
+          │                ▼
+          │     Redirect → localhost:3000/login
+          │                │
+          │         User logs in
+          │         POST /api/login
+          │                │
+          │         Passport authenticates
+          │         Session cookie set
+          │                │
+          │         Redirect → localhost:3001
+          │
+         200 OK
+          │
+          ▼
+   Dashboard renders
+   (Holdings, Orders, Positions, etc. all fetch with same cookie)
+```
 
 ---
 
 ## Getting Started
 
-You'll need **Node.js**, **npm**, and a **MongoDB Atlas** connection string (or local MongoDB).
+**Prerequisites:** Node.js 18+, npm, a MongoDB Atlas account (free tier works fine)
 
-### 1. Clone the repo
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/Adarsh-2413/Zerotha-Dashboard.git
 cd Zerotha-Dashboard
 ```
 
-### 2. Set up the backend
+### 2. Configure and start the backend
 
 ```bash
 cd backend
 npm install
 ```
 
-Create a `.env` file inside `backend/`:
+Create `backend/.env`:
 
 ```env
-MONGO_URL=your_mongodb_connection_string
-SESSION_SECRET=pick_any_long_random_string
+MONGO_URL=mongodb+srv://<user>:<password>@cluster0.xxxxx.mongodb.net/zerotha
+SESSION_SECRET=any_long_random_string_here
 ```
-
-Start the server:
 
 ```bash
 npm start
-# Running on http://localhost:3002
+# ✅ DB connected
+# ✅ Backend running on http://localhost:3002
 ```
 
-The first time it runs, it'll auto-seed holdings and positions data into your database.
+> On first run, it auto-seeds 12 holdings and 2 positions into MongoDB.
 
-### 3. Start the frontend
+### 3. Start the frontend (marketing site + auth)
 
 ```bash
 cd ../frontend
 npm install
 npm start
-# Running on http://localhost:3000
+# http://localhost:3000
 ```
 
 ### 4. Start the dashboard
@@ -97,86 +190,54 @@ npm start
 cd ../Dashboard
 npm install
 npm start
-# Running on http://localhost:3001
+# http://localhost:3001
 ```
 
-That's it — open `http://localhost:3000`, create an account, log in, and you'll land on the dashboard.
+Open `http://localhost:3000` → Sign up → Log in → You'll land on the dashboard.
 
 ---
 
-## How the auth flow works
+## API Reference
 
-```
-User visits localhost:3001 (Dashboard)
-        │
-        ▼
-  Calls GET /api/me
-        │
-   ┌────┴────┐
-   │         │
-  200       401
-   │         │
-   ▼         ▼
-Render   Redirect to
-Dashboard  localhost:3000/login
-```
-
-After a successful login, the frontend redirects back to `localhost:3001` — the dashboard — and everything loads automatically from there.
+| Method | Endpoint | Auth Required | Description |
+|--------|----------|---------------|-------------|
+| POST | `/api/register` | ❌ | Create a new user account |
+| POST | `/api/login` | ❌ | Authenticate and start a session |
+| GET | `/api/logout` | ❌ | End the session |
+| GET | `/api/me` | ✅ | Get the logged-in user's info |
+| GET | `/api/allHoldings` | ✅ | Fetch portfolio holdings |
+| GET | `/api/allPositions` | ✅ | Fetch open positions |
+| GET | `/api/allOrders` | ✅ | Fetch order history |
+| POST | `/api/newOrder` | ✅ | Place a new buy/sell order |
 
 ---
 
-## Project Structure (abbreviated)
+## What I Learned Building This
 
-```
-backend/
-  index.js              # Express app, all routes
-  model/
-    UserModel.js        # Mongoose user schema + passport plugin
-    HoldingsModel.js
-    OrdersModel.js
-    PositionsModel.js
-  schemas/
-    ...                 # Mongoose schema definitions
-
-frontend/src/
-  index.js              # App entry — sets up all routes
-  landing/
-    Navbar.js / Footer.js
-    home/               # Landing page sections
-    signup/             # Login.js + SignUP.js
-    about/ pricing/ products/ support/
-
-Dashboard/src/
-  index.js              # Auth check before rendering
-  components/
-    Menu.js             # Sidebar nav + logout
-    Dashboard.js        # Main layout
-    Holdings.js         # Holdings table
-    Positions.js        # Positions table
-    Orders.js           # Live orders from DB
-    WatchList.js        # Watchlist with buy window
-    BuyActionWindow.js  # Buy order popup
-    DoughnoutChart.js   # Portfolio chart
-  utils/
-    api.js              # Shared axios instance
-```
+- How to share sessions across multiple origins using `cors` with `credentials: true` and `withCredentials` on Axios
+- Why `passport-local-mongoose` v9 needs `.default` when imported with CommonJS `require()`
+- How to structure a monorepo with separate frontends talking to one backend
+- The difference between JWT and session-based auth in practice — and why sessions work better when you control all your own origins
+- How to use React Router v7's `<Routes>` and `<Route>` properly across two separate apps
 
 ---
 
-## Known Limitations
+## Upcoming Improvements
 
-- No real-time price updates — stock prices are static/seeded values for now.
-- Holdings and positions are shared across all users (no per-user filtering yet).
-- No SELL flow implemented yet — only BUY orders work.
+- [ ] Per-user holdings and positions (currently shared across all accounts)
+- [ ] SELL order flow
+- [ ] Real-time price updates via WebSockets
+- [ ] Mobile-responsive layout
+- [ ] Deploy to production (Render / Vercel + MongoDB Atlas)
 
 ---
 
-## Why I built this
+## Author
 
-I wanted to understand how a real trading platform works end-to-end — the auth flow, protected routes across multiple apps sharing a session, and how the frontend and backend coordinate. Zerodha was the inspiration since I actually use it, and Zerotha felt like a fitting name for the clone.
+**Adarsh Shukla** — [github.com/Adarsh-2413](https://github.com/Adarsh-2413)
 
 ---
 
 ## License
 
-MIT — do whatever you want with it.
+MIT
