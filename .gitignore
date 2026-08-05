@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+Dashboard/node_modules/
+backend/node_modules/
+
+# Build outputs
+frontend/build/
+Dashboard/build/
+
+# Environment variables (keep secrets out of git)
+backend/.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# React
+frontend/.env.local
+Dashboard/.env.local
