@@ -29,7 +29,8 @@ function SignUpPage() {
 
     setLoading(true);
     try {
-      const response = await axios.post("http://localhost:3002/api/register", {
+      const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3002";
+      const response = await axios.post(`${API_URL}/api/register`, {
         username: formData.username,
         email: formData.email,
         password: formData.password,

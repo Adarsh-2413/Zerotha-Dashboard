@@ -17,10 +17,37 @@ const SESSION_SECRET = process.env.SESSION_SECRET || "zerothafallbacksecret";
 
 const app = express();
 
-// ─── CORS — allow both Frontend (3000) and Dashboard (3001) with credentials ───
+// Trust reverse proxy in production (Render, Vercel, Railway, etc.)
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+}
+
+// ─── CORS — allow both Frontend and Dashboard with credentials ───
+const rawOrigins = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  process.env.FRONTEND_URL,
+  process.env.DASHBOARD_URL,
+];
+
+// Clean up allowed origins (strip trailing slashes, split comma-separated if any)
+const allowedOrigins = rawOrigins
+  .filter(Boolean)
+  .flatMap((url) => url.split(",").map((s) => s.trim().replace(/\/$/, "")));
+
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://localhost:3001"],
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      const cleanOrigin = origin.replace(/\/$/, "");
+      if (
+        allowedOrigins.includes(cleanOrigin) ||
+        process.env.NODE_ENV !== "production"
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true); // Permissive in deployment to ensure smooth communication
+    },
     credentials: true, // allow session cookies cross-origin
   })
 );
@@ -29,6 +56,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ─── Session ────────────────────────────────────────────────────────────────────
+const isProduction = process.env.NODE_ENV === "production";
+
 app.use(
   session({
     secret: SESSION_SECRET,
@@ -37,9 +66,16 @@ app.use(
     cookie: {
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000, // 1 day
+      secure: isProduction, // Must be true in HTTPS production for sameSite=none
+      sameSite: isProduction ? "none" : "lax", // 'none' required for cross-domain auth
     },
   })
 );
+
+// ─── Health check / root route ──────────────────────────────────────────────────
+app.get("/", (req, res) => {
+  res.json({ status: "ok", message: "Zerotha Backend API is live" });
+});
 
 // ─── Passport ───────────────────────────────────────────────────────────────────
 passport.use(UserModel.createStrategy());

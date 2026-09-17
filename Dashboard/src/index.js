@@ -23,7 +23,8 @@ const renderApp = async () => {
     );
   } catch (err) {
     // Not authenticated — redirect to Frontend login
-    window.location.href = "http://localhost:3000/login";
+    const FRONTEND_URL = process.env.REACT_APP_FRONTEND_URL || "http://localhost:3000";
+    window.location.href = `${FRONTEND_URL}/login`;
   }
 };
 

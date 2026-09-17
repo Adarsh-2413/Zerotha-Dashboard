@@ -8,8 +8,9 @@ function Navbar() {
 
   useEffect(() => {
     // Check if user has an active session
+    const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3002";
     axios
-      .get('http://localhost:3002/api/me', { withCredentials: true })
+      .get(`${API_URL}/api/me`, { withCredentials: true })
       .then((res) => {
         setUser(res.data);
       })
@@ -21,7 +22,8 @@ function Navbar() {
 
   const handleLogout = async () => {
     try {
-      await axios.get('http://localhost:3002/api/logout', { withCredentials: true });
+      const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3002";
+      await axios.get(`${API_URL}/api/logout`, { withCredentials: true });
       setUser(null);
     } catch (err) {
       console.error('Logout error:', err);
@@ -29,7 +31,8 @@ function Navbar() {
   };
 
   const handleOpenDashboard = () => {
-    window.open('http://localhost:3001', '_blank');
+    const DASHBOARD_URL = process.env.REACT_APP_DASHBOARD_URL || 'http://localhost:3001';
+    window.open(DASHBOARD_URL, '_blank');
   };
 
   // Generate initials from username
@@ -40,8 +43,8 @@ function Navbar() {
 
   return (
     <nav
-      className="navbar navbar-expand-lg border-bottom"
-      style={{ backgroundColor: '#FFF' }}
+      className="navbar navbar-expand-lg"
+      style={{ backgroundColor: '#FFF', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', padding: '10px 0' }}
     >
       <div className="container p-2">
         <Link className="navbar-brand" to="/">
@@ -157,12 +160,14 @@ function Navbar() {
                           style={{
                             background: '#387ed1',
                             color: '#fff',
-                            padding: '6px 16px',
-                            borderRadius: '4px',
+                            padding: '8px 20px',
+                            borderRadius: '6px',
                             textDecoration: 'none',
-                            fontWeight: '600',
+                            fontWeight: '500',
                             marginLeft: '8px',
                             fontSize: '0.9rem',
+                            boxShadow: '0 2px 5px rgba(56,126,209,0.3)',
+                            transition: 'all 0.2s ease'
                           }}
                         >
                           Login

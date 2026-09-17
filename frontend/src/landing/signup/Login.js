@@ -22,7 +22,7 @@ function LoginPage() {
 
     try {
       const response = await axios.post(
-        "http://localhost:3002/api/login",
+        `${process.env.REACT_APP_API_URL || "http://localhost:3002"}/api/login`,
         { username: formData.username, password: formData.password },
         { withCredentials: true } // send/receive session cookie
       );

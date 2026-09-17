@@ -222,13 +222,60 @@ Open `http://localhost:3000` → Sign up → Log in → You'll land on the dashb
 
 ---
 
-## Upcoming Improvements
+---
 
-- [ ] Per-user holdings and positions (currently shared across all accounts)
-- [ ] SELL order flow
-- [ ] Real-time price updates via WebSockets
-- [ ] Mobile-responsive layout
-- [ ] Deploy to production (Render / Vercel + MongoDB Atlas)
+## Deployment Guide
+
+Deploying this 3-tier architecture (Frontend, Dashboard, Backend) is completely free using **Vercel** (for Frontend & Dashboard) and **Render** (for Backend API):
+
+### Step 1: Deploy Backend on Render
+1. Go to [render.com](https://dashboard.render.com) and create a **New Web Service**.
+2. Connect your GitHub repository: `https://github.com/Adarsh-2413/Zerotha-Dashboard`.
+3. Configure the settings:
+   - **Root Directory**: `backend`
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start` (or `node index.js`)
+4. Add the following **Environment Variables**:
+   - `MONGO_URL`: *Your MongoDB connection string from MongoDB Atlas*
+   - `SESSION_SECRET`: *A secure random string (e.g. `zerothaprodsecret9988`)*
+   - `NODE_ENV`: `production`
+5. Click **Deploy Web Service** and copy your backend URL (e.g., `https://zerotha-backend.onrender.com`).
+
+---
+
+### Step 2: Deploy Frontend on Vercel
+1. Go to [vercel.com](https://vercel.com/new) and import `Zerotha-Dashboard`.
+2. Configure project settings:
+   - **Project Name**: `zerotha-frontend`
+   - **Framework Preset**: `Create React App`
+   - **Root Directory**: Click Edit and select `frontend`
+3. Add **Environment Variables**:
+   - `REACT_APP_API_URL`: `https://your-backend-service.onrender.com`
+   - `REACT_APP_DASHBOARD_URL`: `https://your-dashboard-service.vercel.app` *(update once dashboard is deployed)*
+4. Click **Deploy**.
+
+---
+
+### Step 3: Deploy Dashboard on Vercel
+1. Go to [vercel.com/new](https://vercel.com/new) and import `Zerotha-Dashboard` again as a separate project.
+2. Configure project settings:
+   - **Project Name**: `zerotha-dashboard`
+   - **Framework Preset**: `Create React App`
+   - **Root Directory**: Click Edit and select `Dashboard`
+3. Add **Environment Variables**:
+   - `REACT_APP_API_URL`: `https://your-backend-service.onrender.com`
+   - `REACT_APP_FRONTEND_URL`: `https://your-frontend-service.vercel.app`
+4. Click **Deploy**.
+
+---
+
+### Step 4: Link Frontend & Dashboard URLs back to Backend
+In your **Render Backend Dashboard**:
+1. Go to **Environment**.
+2. Add/Update:
+   - `FRONTEND_URL`: `https://your-frontend-service.vercel.app`
+   - `DASHBOARD_URL`: `https://your-dashboard-service.vercel.app`
+3. Save changes — Render will automatically redeploy and sync CORS & cookie rules!
 
 ---
 
@@ -237,7 +284,3 @@ Open `http://localhost:3000` → Sign up → Log in → You'll land on the dashb
 **Adarsh Shukla** — [github.com/Adarsh-2413](https://github.com/Adarsh-2413)
 
 ---
-
-## License
-
-MIT

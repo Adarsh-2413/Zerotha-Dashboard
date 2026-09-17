@@ -1,0 +1,23 @@
+services:
+  # Backend API Service
+  - type: web
+    name: zerotha-backend
+    env: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: PORT
+        value: 3002
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: MONGO_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: DASHBOARD_URL
+        sync: false
