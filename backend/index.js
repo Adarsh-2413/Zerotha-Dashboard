@@ -244,11 +244,15 @@ const seedDatabase = async () => {
 // ─── Start Server ────────────────────────────────────────────────────────────────
 const start = async () => {
   try {
+    if (!uri) {
+      throw new Error("MONGO_URL environment variable is not defined!");
+    }
+    console.log("Connecting to MongoDB...");
     await mongoose.connect(uri);
-    console.log("✅ DB connected");
+    console.log("✅ DB connected successfully");
     await seedDatabase();
     app.listen(PORT, () => {
-      console.log(`✅ Backend running on http://localhost:${PORT}`);
+      console.log(`✅ Backend running on port ${PORT}`);
     });
   } catch (err) {
     console.error("❌ DB connection error:", err);
